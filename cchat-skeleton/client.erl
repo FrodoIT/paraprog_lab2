@@ -33,8 +33,6 @@ handle(St, {join, Channel}) ->
 	%Ref = make_ref(),
 	%	St#client_st.server ! {request,self(),Ref,{join,Channel,St#client_st.nick}},
 
-
-
 % Leave channel
 handle(St, {leave, Channel}) ->
 	Result = genserver:request(St#client_st.server, {leave,Channel,self()}),
@@ -46,10 +44,10 @@ handle(St, {leave, Channel}) ->
 
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
-		genserver:request(St#client_st.server, {message_send,Channel,self(),Msg}),
+		Result = genserver:request(St#client_st.server, {message_send,Channel,self(),Msg,St#client_st.nick}),
 		%Ref = make_ref(),
 		%St#client_st.server ! {request,self(),Ref,{message_send,Channel,St#client_st.nick,Msg}},
-    {reply, ok, St} ;
+    {reply, Result, St};
     %{reply, {error, not_implemented, "message sending not implemented"}, St} ;
 
 % ---------------------------------------------------------------------------
