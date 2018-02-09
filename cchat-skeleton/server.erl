@@ -29,8 +29,6 @@ handler(State,Data)->
 
 	case Data of
 		{join,Channel,Pid} ->
-
-			%NewState = State,
 			io:fwrite("JOINING! ~n"),
 			ThisChannel = lists:keyfind(Channel,2,State#serverState.channels),
 			if
@@ -64,9 +62,22 @@ handler(State,Data)->
 
 
 
-		{leave,Channel,Nick} ->
+		{leave,Channel,Pid} ->
 			io:fwrite("LEAVING! ~n"),
-			{test,State};
+			ThisChannel = lists:keyfind(Channel,2,State#serverState.channels),
+			if
+				not ThisChannel ->
+					io:fwrite("user not joined"),
+					{reply,{error,user_not_joined,"User not joined"},State};
+				true ->
+					io:fwrite("User left"),
+					UpdatedMembers = lists:delete(Pid,ThisChannel#channel.members),
+					UpdatedChannel = #channel{name = Channel,members = UpdatedMembers},
+					UpdatedChannels = [UpdatedChannel | lists:delete(ThisChannel,State#serverState.channels)],
+					NewState = #serverState{channels = UpdatedChannels},
+					{reply,ok,NewState}
+			end;
+
 		{message_send, Channel,Nick, Msg} ->
 			io:fwrite("WRITING ~n"),
 			{test,State};

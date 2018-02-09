@@ -37,10 +37,10 @@ handle(St, {join, Channel}) ->
 
 % Leave channel
 handle(St, {leave, Channel}) ->
-	genserver:request(St#client_st.server, {leave,Channel,self()}),
+	Result = genserver:request(St#client_st.server, {leave,Channel,self()}),
 		%Ref = make_ref(),
 		%St#client_st.server ! {request,self(),Ref,{leave,Channel,St#client_st.nick}},
-    {reply, ok, St};
+	{reply, Result, St};
 		%{reply, {error, not_implemented, "message sending not implemented"}, St} ;
 
 
