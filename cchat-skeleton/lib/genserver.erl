@@ -27,9 +27,7 @@ loop(State, F) ->
           loop(State, F);
         {reply, R, NewState} ->
           From!{result, Ref, R},
-          loop(NewState, F);
-				{test,NewState} ->
-					loop(NewState, F)
+          loop(NewState, F)
         end;
     {update, From, Ref, NewF} ->
       From ! {ok, Ref},
