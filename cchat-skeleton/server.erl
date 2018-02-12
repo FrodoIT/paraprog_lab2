@@ -29,26 +29,26 @@ handler(State,Data)->
 
 	case Data of
 		{join,ChannelName,Pid} ->
-			io:fwrite("JOINING! ~n"),
+			io:fwrite("'join', in server ~n"),
 			Channel = lists:keyfind(ChannelName,2,State#serverState.channels),
 			if
 				not Channel ->
-					io:fwrite("added channel~n"),
+					io:fwrite("    added channel~n"),
 					NewChannel = #channel{name = ChannelName,members = [Pid]},
 					Channels = State#serverState.channels,
 					NewState = #serverState{channels = [NewChannel|Channels]},
 					{reply, ok, NewState};
 				true ->
 
-					io:fwrite("Channel already exist~n"),
+					io:fwrite("    Channel already exist~n"),
 					Joined = lists:member(Pid,Channel#channel.members),
 					if
 						Joined ->
-							io:fwrite("user already joined~n"),
+							io:fwrite("    user already joined~n"),
 							NewState = State,
 							{reply,{error, user_already_joined, "User already joined"},NewState};
 						not Joined ->
-							io:fwrite("user joined~n"),
+							io:fwrite("    user joined~n"),
 							UpdatedMembers = [Pid|Channel#channel.members],
 							UpdatedChannel = #channel{name = ChannelName,members = UpdatedMembers},
 							UpdatedChannels = [UpdatedChannel | lists:delete(Channel,State#serverState.channels)],
@@ -58,14 +58,14 @@ handler(State,Data)->
 			end;
 
 		{leave,ChannelName,Pid} ->
-			io:fwrite("LEAVING! ~n"),
+			io:fwrite("'leave', in server ~n"),
 			Channel = lists:keyfind(ChannelName,2,State#serverState.channels),
 			if
 				not Channel ->
-					io:fwrite("user not joined"),
+					io:fwrite("    user not joined~n"),
 					{reply,{error,user_not_joined,"User not joined"},State};
 				true ->
-					io:fwrite("User left"),
+					io:fwrite("    User left~n"),
 					UpdatedMembers = lists:delete(Pid,Channel#channel.members),
 					UpdatedChannel = #channel{name = ChannelName,members = UpdatedMembers},
 					UpdatedChannels = [UpdatedChannel | lists:delete(Channel,State#serverState.channels)],
@@ -74,37 +74,27 @@ handler(State,Data)->
 			end;
 
 		{message_send, ChannelName,Pid, Msg,Nick} ->
-			%if member in channel, send massage do members
-			%if not member return user_not_joined
-			io:fwrite("WRITING ~n"),
+			io:fwrite("'message_send', in server ~n"),
 			Channel = lists:keyfind(ChannelName,2,State#serverState.channels),
 			Joined = lists:member(Pid,Channel#channel.members),
 			if
 				Joined ->
-				%Do something
 					Members = Channel#channel.members,
-					send_message(Members,Msg,Channel,State),
-					%lists:foreach(fun(To) -> To ! {message_receive, Channel, Msg} end, Members),
+					send_message(Members,{Msg, Nick},Channel,State),
 					{reply,ok,State};
 
 				not Joined ->
-					io:fwrite("can't write in channel not joined"),
-					{reply,{error,user_not_joined,"User not joined"},State}
+					io:fwrite("    can't write in channel not joined~n"),
+					{reply,{error,user_not_joined,"    User not joined~n"},State}
 			end
 	end.
 
-send_message([H|T], Msg,Channel,State) ->
-	H ! {State,{message_receive, Channel, Msg}},
-	io:fwrite("did this"),
-	send_message(T,Msg,Channel,State);
+send_message([H|T],{Msg, Nick},Channel,State) ->
+io:fwrite("- - - 'send_message([H|T],{Msg, Nick},Channel,State)' in server ~n"),
+%	H ! {State,{message_receive, Channel, Nick, Msg}},
+	genserver:request(H, {State,{message_receive, Channel, Nick ,Msg}}),
+	io:fwrite("    To: ~p(~p). send_message <<~p>> in server. channel: ~p~n", [Nick,H,Msg,Channel]),
+	send_message(T,{Msg, Nick},Channel,State);
 
 	send_message([],_,_,_) ->
 		ok.
-
-
-
-
-
-
-
-
