@@ -70,7 +70,6 @@ handle(St, {leave, Channel}) ->
 
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
-	%Result = genserver:request(St#client_st.server, {message_send,Channel,self(),Msg,St#client_st.nick}),
 
 	Joined = lists:keyfind(Channel,2,St#client_st.channels),
 	if
@@ -79,6 +78,7 @@ handle(St, {message_send, Channel, Msg}) ->
 
 		true ->
 			list_to_atom(Channel) ! {request, self(), {send_message, Channel, St#client_st.nick, self(), Msg}},
+			io:fwrite("Hello"),
 			{reply, ok, St}
 	end;
 

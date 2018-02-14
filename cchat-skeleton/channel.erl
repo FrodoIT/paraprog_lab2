@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author rasmus
-%%% @copyright (C) 2018, <COMPANY>
+%%% @copyright (C) 2018, <COMPANY YEAH>
 %%% @doc
 %%%
 %%% @end
@@ -39,14 +39,13 @@ operation(State, Data)->
 		{send_message, Channel, Nick, FromPid, Msg}->
 			%Do messaging
 			Receivers = lists:delete(FromPid,State#channel.members),
-			io:fwrite("State#channel.members ~p~n", [State#channel.members]),
-			io:fwrite("Receivers ~p~n", [Receivers]),
 			spawn(fun() -> lists:foreach(
 				fun (ToPid) ->
 					spawn(fun () -> genserver:request(ToPid,{message_receive, Channel, Nick ,Msg}) end)
 				end,
 				Receivers
-			)end);
+			)end),
+			{reply, ok, State};
 		{leave,ClientPid}->
 			%Do leaving
 			leave_channel(ClientPid,State)
