@@ -45,7 +45,6 @@ handle(St, {join, Channel}) ->
 					{reply,ok,NewState}
 			catch
 				_:_ ->
-					io:format("sjdkabsfkabdfkjabf"),
 					{reply,{error,server_not_reached, "server not reached"},St}
 			end;
 		true ->
