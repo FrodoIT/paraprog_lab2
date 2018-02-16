@@ -14,11 +14,6 @@
 	channels % the channels this client is a member of
 }).
 
--record(channel,{
-	name, % name of the channel
-	pid % process ID for the chanel
-}).
-
 % Return an initial state record. This is called from GUI.
 % Do not change the signature of this function.
 initial_state(Nick, GUIAtom, ServerAtom) ->
@@ -41,13 +36,11 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 handle(St, {join, Channel}) ->
 
 	%See if client already joined channel. 
-	Joined = lists:keyfind(Channel,2,St#client_st.channels),
+	Joined = lists:member(Channel,St#client_st.channels),
 	if
 		not Joined ->
-			{Result, ChannelID} = genserver:request(St#client_st.server, {join,Channel,self()}),
-			NewChannel = #channel{name = Channel, pid = ChannelID},
-			NewChannellist = [NewChannel | St#client_st.channels],
-			NewState = St#client_st{channels = NewChannellist},
+			NewState = St#client_st{channels = [Channel|St#client_st.channels]},
+			Result = genserver:request(St#client_st.server, {join,Channel,self()}),
 			{reply,Result,NewState};
 
 		true ->
@@ -58,12 +51,12 @@ handle(St, {join, Channel}) ->
 handle(St, {leave, Channel}) ->
 
 	%Se if client joined channel
-	Joined = lists:keyfind(Channel,2,St#client_st.channels),
+	Joined = lists:member(Channel,St#client_st.channels),
 	if
 		not Joined ->
 			{reply,{error,user_not_joined,"User not joined"},St};
 		true ->
-			genserver:request(Joined#channel.pid, {leave,self()}),
+			genserver:request(list_to_atom(Channel), {leave,self()}),
 			NewState = St#client_st{channels = lists:delete(Joined,St#client_st.channels)},
 			{reply, ok, NewState}
 	end;
@@ -71,7 +64,7 @@ handle(St, {leave, Channel}) ->
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
 
-	Joined = lists:keyfind(Channel,2,St#client_st.channels),
+	Joined = lists:member(Channel,St#client_st.channels),
 	if
 		not Joined ->
 			{reply,{error, user_not_joined,"User not joined"}, St};

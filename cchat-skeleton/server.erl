@@ -8,7 +8,7 @@
 % Start a new server process with the given name
 % Do not change the signature of this function.
 -record(serverState, {channels=[]}).
--record(channel,{name ="channelname",pid = "ChannelID"}).
+
 
 start(ServerAtom) ->
 	% - Spawn a new process which waits for a message, handles it, then loops infinitely
@@ -23,16 +23,16 @@ stop(ServerAtom) ->
 handler(State,Data)->
 	case Data of
 		{join,ChannelName,ClientPid} ->
-			Channel = lists:keyfind(ChannelName,2,State#serverState.channels),
+			Channel = lists:member(ChannelName,State#serverState.channels),
 			if
 				%Add channel
 				not Channel ->
-					NewChannelID = channel:start(ClientPid, ChannelName),
-					NewChannels = [#channel{name = ChannelName, pid = NewChannelID}| State#serverState.channels],
-					NewState = #serverState{channels = NewChannels},
-					{reply, {ok, NewChannelID}, NewState};
+					channel:start(ClientPid,ChannelName),
+					NewState = #serverState{channels = [ChannelName | State#serverState.channels]},
+					{reply, ok, NewState};
 				%Join existing channel
 				true ->
-					genserver:request(Channel#channel.pid, {join, ClientPid})
+					Result = genserver:request(list_to_atom(ChannelName), {join, ClientPid}),
+					{reply, Result, State}
 			end
 	end.

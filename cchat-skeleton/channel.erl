@@ -36,9 +36,8 @@ leave_channel(ClientPid, State)->
 	NewState = State#channel{members = NewMembers},
 	{reply, ok, NewState}.
 
-join_channel(NickPid, State)->
-	NewMembers = [NickPid | State#channel.members],
-	NewState = State#channel{members = NewMembers},
-	{reply,{ok, self()}, NewState}.
+join_channel(ClientPid, State)->
+	NewState = State#channel{members = [ClientPid|State#channel.members]},
+	{reply,ok, NewState}.
 
 
