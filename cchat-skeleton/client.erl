@@ -40,11 +40,12 @@ handle(St, {join, Channel}) ->
 	if
 		not Joined ->
 			NewState = St#client_st{channels = [Channel|St#client_st.channels]},
-			case catch (genserver:request(St#client_st.server, {join,Channel,self()})) of
+			try genserver:request(St#client_st.server, {join,Channel,self()}) of
 				ok ->
-					{reply,ok,NewState};
-				{'EXIT', Reason} ->
-					io:format("THERE WAS AN ERROR!!"),
+					{reply,ok,NewState}
+			catch
+				_:_ ->
+					io:format("sjdkabsfkabdfkjabf"),
 					{reply,{error,server_not_reached, "server not reached"},St}
 			end;
 		true ->
