@@ -1,18 +1,11 @@
-%%%-------------------------------------------------------------------
-%%% @author rasmus
-%%% @copyright (C) 2018, <COMPANY YEAH>
-%%% @doc
-%%%
-%%% @end
-%%% Created : 13. feb 2018 16:51
-%%%-------------------------------------------------------------------
+% TDA384 Lab2
+% Group 12
+% Rasmus Tomasson (rastom), Sofia Larborn (soflarb)
+
 -module(channel).
--author("rasmus").
+-export([start/2]).
 
 -record(channel,{members=[]}).
-
-%% API
--export([start/2]).
 
 %Create a channel
 start(FirstMemberPid, Name) ->
@@ -55,8 +48,6 @@ leave_channel(ClientPid, State)->
 	NewMembers = lists:delete(ClientPid,State#channel.members),
 	NewState = State#channel{members = NewMembers},
 	{reply, ok, NewState}.
-
-
 
 join_channel(NickPid, State)->
 	NewMembers = [NickPid | State#channel.members],

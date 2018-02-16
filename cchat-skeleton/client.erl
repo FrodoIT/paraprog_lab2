@@ -1,3 +1,7 @@
+% TDA384 Lab2
+% Group 12
+% Rasmus Tomasson (rastom), Sofia Larborn (soflarb)
+
 -module(client).
 -export([handle/2, initial_state/3]).
 
@@ -36,7 +40,7 @@ initial_state(Nick, GUIAtom, ServerAtom) ->
 % Join channel
 handle(St, {join, Channel}) ->
 
-	%Se if client already joined channel
+	%See if client already joined channel. 
 	Joined = lists:keyfind(Channel,2,St#client_st.channels),
 	if
 		not Joined ->
@@ -49,8 +53,6 @@ handle(St, {join, Channel}) ->
 		true ->
 			{reply,{error,user_already_joined,"User already joined"},St}
 	end;
-
-
 
 % Leave channel
 handle(St, {leave, Channel}) ->
@@ -67,7 +69,6 @@ handle(St, {leave, Channel}) ->
 			{reply, ok, NewState}
 	end;
 
-
 % Sending message (from GUI, to channel)
 handle(St, {message_send, Channel, Msg}) ->
 
@@ -81,7 +82,6 @@ handle(St, {message_send, Channel, Msg}) ->
 			io:fwrite("Hello"),
 			{reply, ok, St}
 	end;
-
 
 % ---------------------------------------------------------------------------
 % The cases below do not need to be changed...
@@ -97,7 +97,6 @@ handle(St, {nick, NewNick}) ->
 
 % Incoming message (from channel, to GUI)
 handle(St = #client_st{gui = GUI}, {message_receive, Channel, Nick, Msg}) ->
-	io:fwrite("- - - 'handle(St = #client_st{gui = GUI}, {message_receive, Channel, Nick, Msg})' in client ~n"), %TEMPORARY DEBUG PRINT
 	gen_server:call(GUI, {message_receive, Channel, Nick++"> "++Msg}),
 	{reply, ok, St} ;
 
