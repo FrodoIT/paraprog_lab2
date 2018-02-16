@@ -22,24 +22,17 @@ stop(ServerAtom) ->
 
 handler(State,Data)->
 	case Data of
-		{join,ChannelName,NickPid} ->
-			%io:fwrite("'join', in server ~n"),
+		{join,ChannelName,ClientPid} ->
 			Channel = lists:keyfind(ChannelName,2,State#serverState.channels),
 			if
 				%Add channel
 				not Channel ->
-					%io:fwrite("    added channel~n"),
-					NewChannelID = channel:start(NickPid, ChannelName),
+					NewChannelID = channel:start(ClientPid, ChannelName),
 					NewChannels = [#channel{name = ChannelName, pid = NewChannelID}| State#serverState.channels],
 					NewState = #serverState{channels = NewChannels},
 					{reply, {ok, NewChannelID}, NewState};
 				%Join existing channel
 				true ->
-					%io:fwrite("    Channel already exist~n"),
-					Channel#channel.pid ! {request, self(), {join, NickPid}},
-					receive
-						{reply,Result} ->
-							{reply, {Result, Channel#channel.pid}, State}
-					end
+					genserver:request(Channel#channel.pid, {join, ClientPid})
 			end
 	end.

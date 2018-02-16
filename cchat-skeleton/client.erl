@@ -63,8 +63,7 @@ handle(St, {leave, Channel}) ->
 		not Joined ->
 			{reply,{error,user_not_joined,"User not joined"},St};
 		true ->
-			Joined#channel.pid ! {request, self(), {leave, self()}},
-
+			genserver:request(Joined#channel.pid, {leave,self()}),
 			NewState = St#client_st{channels = lists:delete(Joined,St#client_st.channels)},
 			{reply, ok, NewState}
 	end;
@@ -78,8 +77,7 @@ handle(St, {message_send, Channel, Msg}) ->
 			{reply,{error, user_not_joined,"User not joined"}, St};
 
 		true ->
-			list_to_atom(Channel) ! {request, self(), {send_message, Channel, St#client_st.nick, self(), Msg}},
-			io:fwrite("Hello"),
+			genserver:request(list_to_atom(Channel), {send_message, Channel, St#client_st.nick, self(), Msg}),
 			{reply, ok, St}
 	end;
 

@@ -9,20 +9,7 @@
 
 %Create a channel
 start(FirstMemberPid, Name) ->
-	Pid = spawn(fun() -> loop(#channel{members = [FirstMemberPid]}) end),
-	catch(unregister(Name)),
-	register(list_to_atom(Name), Pid),
-	Pid.
-
-loop(State)->
-	receive
-		{request, From, Data} ->
-			catch case (operation(State, Data)) of
-							{reply, Reply, NewState}->
-								From ! {reply, Reply},
-								loop(NewState)
-						end
-	end.
+	genserver:start(list_to_atom(Name), #channel{members = [FirstMemberPid]}, fun operation/2).
 
 operation(State, Data)->
 	case Data of
@@ -34,7 +21,7 @@ operation(State, Data)->
 			Receivers = lists:delete(FromPid,State#channel.members),
 			spawn(fun() -> lists:foreach(
 				fun (ToPid) ->
-					spawn(fun () -> genserver:request(ToPid,{message_receive, Channel, Nick ,Msg}) end)
+					spawn(fun () -> genserver:request(ToPid,{message_receive, Channel, Nick, Msg}) end)
 				end,
 				Receivers
 			)end),
@@ -52,6 +39,6 @@ leave_channel(ClientPid, State)->
 join_channel(NickPid, State)->
 	NewMembers = [NickPid | State#channel.members],
 	NewState = State#channel{members = NewMembers},
-	{reply,ok, NewState}.
+	{reply,{ok, self()}, NewState}.
 
 
