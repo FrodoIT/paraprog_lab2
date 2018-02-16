@@ -40,9 +40,13 @@ handle(St, {join, Channel}) ->
 	if
 		not Joined ->
 			NewState = St#client_st{channels = [Channel|St#client_st.channels]},
-			Result = genserver:request(St#client_st.server, {join,Channel,self()}),
-			{reply,Result,NewState};
-
+			case catch (genserver:request(St#client_st.server, {join,Channel,self()})) of
+				ok ->
+					{reply,ok,NewState};
+				{'EXIT', Reason} ->
+					io:format("THERE WAS AN ERROR!!"),
+					{reply,{error,server_not_reached, Reason},St}
+			end;
 		true ->
 			{reply,{error,user_already_joined,"User already joined"},St}
 	end;
@@ -57,7 +61,7 @@ handle(St, {leave, Channel}) ->
 			{reply,{error,user_not_joined,"User not joined"},St};
 		true ->
 			genserver:request(list_to_atom(Channel), {leave,self()}),
-			NewState = St#client_st{channels = lists:delete(Joined,St#client_st.channels)},
+			NewState = St#client_st{channels = lists:delete(Channel,St#client_st.channels)},
 			{reply, ok, NewState}
 	end;
 
