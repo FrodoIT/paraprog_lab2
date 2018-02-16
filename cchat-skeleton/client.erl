@@ -45,7 +45,7 @@ handle(St, {join, Channel}) ->
 					{reply,ok,NewState};
 				{'EXIT', Reason} ->
 					io:format("THERE WAS AN ERROR!!"),
-					{reply,{error,server_not_reached, Reason},St}
+					{reply,{error,server_not_reached, "server not reached"},St}
 			end;
 		true ->
 			{reply,{error,user_already_joined,"User already joined"},St}
